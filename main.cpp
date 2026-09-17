@@ -1,63 +1,58 @@
+#if defined(__INTELLISENSE__) || !defined(USE_CPP20_MODULES)
+#include <vulkan/vulkan_raii.hpp>
+#else
+import vulkan_hpp;
+#endif
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+
 #include <iostream>
 #include <stdexcept>
-#include <vector>
+#include <cstdlib>
 
-VkInstance instance;
+class HelloTriangleApplication {
+    public:
+        void run() {
+            initWindow();
+            initVulkan();
+            mainLoop();
+            cleanup();
+        }
 
-void createInstance() {
-    VkApplicationInfo appInfo{};
-    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pApplicationName = "Hello Triangle";
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "No Engine";
-    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_0;
+    private:
+        GLFWwindow* window;
 
-    VkInstanceCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    createInfo.pApplicationInfo = &appInfo;
+        void initWindow() {
+            glfwInit();
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+            glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+            window = glfwCreateWindow(800, 600, "Vulkan", nullptr, nullptr);
+        }
 
-    // Get extensions required by GLFW
-    uint32_t glfwExtensionCount = 0;
-    const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+        void initVulkan() {
 
-    // CRITICAL FOR MACOS/MOLTENVK:
-    // 1. Add the Portability Enumeration extension
-    extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-    // 2. Add Get Physical Device Properties 2 extension
-    extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+        }
 
-    createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-    createInfo.ppEnabledExtensionNames = extensions.data();
+        void mainLoop() {
 
-    // 3. Set the Portability Flag
-    createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+        }
 
-    if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create instance!");
-    }
-}
+        void cleanup() {
+
+        }
+
+};
 
 int main() {
-    if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW\n";
-        return EXIT_FAILURE;
-    }
-
     try {
-        createInstance();
-        std::cout << "Vulkan instance created successfully!\n";
+        HelloTriangleApplication app;
+        app.run();
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << "\n";
-        glfwTerminate();
+        std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
 
-    vkDestroyInstance(instance, nullptr);
-    glfwTerminate();
     return EXIT_SUCCESS;
 }
 
