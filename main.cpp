@@ -10,6 +10,7 @@ import vulkan_hpp;
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <string>
 
 constexpr uint32_t WIDTH = 800;
 constexpr uint32_t HEIGHT = 600;
@@ -38,6 +39,7 @@ private:
     GLFWwindow *window;
     vk::raii::Context context;
     vk::raii::Instance instance = nullptr;
+    vk::raii::DebugUtilsMessengerEXT debugMessenger = nullptr;
 
     void initWindow()
     {
@@ -50,6 +52,28 @@ private:
     void initVulkan()
     {
         createInstance();
+        setupDebugMessenger();
+    }
+
+    void setupDebugMessenger()
+    {
+        if (!enableValidationLayers)
+            return;
+
+        vk::DebugUtilsMessageSeverityFlagsEXT severityFlags(vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
+                                            vk::DebugUtilsMessageSeverityFlagBitsEXT::eError);
+        vk::DebugUtilsMessageTypeFlagsEXT messageTypeFlags(vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
+                                            vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
+                                            vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance);
+
+        vk::DebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCreateInfoEXT{};
+        debugUtilsMessengerCreateInfoEXT.sType = vk::StructureType::eDebugUtilsMessengerCreateInfoEXT;
+        debugUtilsMessengerCreateInfoEXT.messageSeverity = severityFlags;
+        debugUtilsMessengerCreateInfoEXT.messageType = messageTypeFlags;
+        debugUtilsMessengerCreateInfoEXT.pfnUserCallback = &debugCallback;
+        debugUtilsMessengerCreateInfoEXT.pUserData = nullptr;
+
+        debugMessenger = instance.createDebugUtilsMessengerEXT(debugUtilsMessengerCreateInfoEXT);
     }
 
     void mainLoop()
@@ -159,8 +183,23 @@ private:
 
         std::vector<const char *> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
+        if (enableValidationLayers)
+        {
+            extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
+
         return extensions;
     }
+
+    static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
+                                         vk::DebugUtilsMessageTypeFlagsEXT type,
+                                         const vk::DebugUtilsMessengerCallbackDataEXT *pCallbackData,
+                                         void *pUserData)
+    {
+        std::cerr << "Validation layer: type " << static_cast<uint32_t>(type) << " msg: " << pCallbackData->pMessage << std::endl;
+        return VK_FALSE;
+    }
+
 };
 
 
